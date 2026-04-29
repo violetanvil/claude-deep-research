@@ -91,3 +91,5 @@ Layer 3 mandatorily includes a Critic/Skeptic thread and a Failure Documentation
 ## Credits
 
 Inspired by [DishantPal/deep-research-skill](https://github.com/DishantPal/deep-research-skill). This version has been substantially restructured around a domain-agnostic discovery architecture, parallel subagent fan-out with on-disk scratchpads, and a mandatory independent red-team pass.
+
+Apache 2.0 Lincense
