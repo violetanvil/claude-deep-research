@@ -179,6 +179,8 @@ This is the most important layer. Most research stops at Layer 2. This skill kee
 
 **The Critic + Failure pair is mandatory.** Most shallow research skips these archetypes. They are usually the two that produce the depth gap. If your Layer 3 threads don't include at least one Critic / Skeptic thread and one Failure Documentation thread, add them before fanning out.
 
+**The Anti-Synthesis thread is also mandatory.** This differs from the Critic / Skeptic thread: Critic threads challenge specific claims; Anti-Synthesis challenges the overall conclusion. Assign one Layer 3 thread with this posture: "Assume the central conclusion this research is heading toward is WRONG. What is the strongest evidence-based case for the opposite? What would have to be true for the main conclusion to fail?" Target the Critic / Skeptic archetype but operate at conclusion level, not claim level. If no Anti-Synthesis thread exists in your Layer 3 plan, add one before fanning out. Name the scratchpad file L3-<id>-anti-synthesis.md.
+
 **The Absence Test:** After all Layer 3 digests return, ask: "What am I NOT seeing? What should exist here but doesn't?" If a thread came back thin, that absence is itself informative.
 
 **Quality gate:** Across all Layer 3 digests, you should have at least 3 specific, non-obvious insights that would surprise someone with surface-level knowledge. If not, dispatch additional threads.
@@ -217,6 +219,8 @@ Things the user didn't ask about but should know exist. The skill aims to delive
 
 Each agent writes findings to `runs/<date>-<slug>/L4-<direction>.md` and returns its digest.
 
+Dispatch the anti-synthesis subagent (Step 4a-prime) in the same message as the Layer 4 agents so it runs concurrently with zero sequential overhead.
+
 **For each adjacency in the digest, the subagent provides:**
 - What it is (1-2 sentences)
 - Why it's relevant to the original question
@@ -236,6 +240,65 @@ Brief flags for things that exist but are outside scope.
 
 ---
 
+### Step 3.5 — Summarizer batch (runs after all L3/L4 digests have returned)
+
+After all Layer 3 and Layer 4 agents have returned their 200-word digests, run the following sequence:
+
+**3.5a: Write run-context mini-summary**
+
+You (main context) write a 300-word run-context summary to `runs/<date>-<slug>/RUN-CONTEXT.md`. This is NOT a deliverable — it exists solely so summarizers can calibrate "Implication for synthesis" without receiving 7,000+ words of raw digests per agent. You write it directly (not via subagent) — you already have all digests in context. Takes ~2 minutes.
+
+RUN-CONTEXT.md format:
+```
+# Run Context — [date]-[slug]
+
+## Central synthesis question
+[1 sentence]
+
+## Emerging conclusion
+[2–3 sentences: what the preponderance of evidence points toward]
+
+## Key threads and their weight
+- L3-T1 (name): [20-word summary, confidence]
+- L3-T2 (name): [...]
+(one line per L3/L4 thread)
+
+## Main tensions / contradictions
+[2–3 sentences: where threads disagree or evidence is thin]
+```
+
+**3.5b: Dispatch summarizer batch**
+
+Dispatch a parallel batch of summarizer agents — one per L3/L4 scratchpad file. Dispatch all in a single message so they run concurrently.
+
+Each summarizer agent receives this prompt:
+
+> You are a findings summarizer. Your job is to prepend a structured KEY FINDINGS block to a research file. You do NOT do additional research — you only read the file and summarize what's there into the KEY FINDINGS format.
+>
+> Your assigned file: [path to L3 or L4 file]
+> Central synthesis question: [paste the Core Question from the Research Plan]
+>
+> Run context (what the rest of the run found — use this to calibrate "Implication for synthesis"):
+> [paste full contents of RUN-CONTEXT.md]
+>
+> Steps:
+> 1. Read the full contents of your assigned file.
+> 2. Read the run context to understand what the rest of the run found.
+> 3. Write a KEY FINDINGS block following the format in
+>    references/source-discovery.md "L3/L4 File Format" section.
+>    The "Implication for synthesis" field should reflect how this thread's findings
+>    interact with what the OTHER threads found — not just what this thread found alone.
+> 4. Prepend the KEY FINDINGS block to the file using the Edit tool.
+>    Insert BEFORE the first line of existing content.
+>    Do not modify the existing content.
+> 5. Return: "Done. KEY FINDINGS prepended to [path]."
+
+**Spawn limit:** Dispatch in parallel batches of up to 12 agents, sequentially between batches. For a typical 35-file run (26 L3 + 9 L4), this means 3 sequential batches. Summarizers are lightweight (read one file + write ~30 lines) and complete in under 60 seconds each — batch size of 12 is safe without rate-limit risk.
+
+Wait for all summarizer agents to complete before proceeding to Step 4.
+
+---
+
 ## Step 4: Synthesis
 
 After all subagents have returned digests and written their notes, synthesize. Read [references/synthesis-engine.md](references/synthesis-engine.md) for the full methodology.
@@ -243,7 +306,42 @@ After all subagents have returned digests and written their notes, synthesize. R
 The synthesis steps:
 
 ### 4a. Read the scratchpad
-Read all files under `runs/<date>-<slug>/` — these contain the raw findings the subagents collected. Main context now sees the full evidence base for the first time. This is intentional: synthesis works on evidence, not on summaries.
+
+The raw evidence base is in `runs/<date>-<slug>/`. Each L3 and L4 file now has a KEY FINDINGS block at the top (written by the Step 3.5 summarizer batch). Synthesis works on evidence, not on digests — use this tiered reading protocol:
+
+**Step 1 — KEY FINDINGS pass (mandatory).** Read the first 40 lines of every L3 and L4 file. Each file's KEY FINDINGS block gives you: overall confidence, implication for synthesis, top findings, strongest counterargument, and key gaps. After this pass, you have touched every thread.
+
+**Step 2 — Full-read selection.** From the KEY FINDINGS pass, identify the 5–8 files whose "Implication for synthesis" is most load-bearing — files where the finding, if wrong, would change the conclusion. Read those files in full.
+
+**Step 3 — Gap flag.** For any file not read in full, note its thread ID and implication-for-synthesis. Before writing the draft, verify no item in that list is conclusion-changing. If one is, promote it to a full read.
+
+**What you must not do:** Synthesize from the 200-word digests that were returned to main context during Layer 3/4 execution. Those were for planning-time decisions. Synthesis works from the scratchpad files.
+
+**Files to skip:** Do not read DIGEST.md, DIGEST.txt, INDEX.md, RUN-CONTEXT.md, or anti-synthesis.md in this step — those are consumed at other steps. Read only L3-*.md and L4-*.md files.
+
+### 4a-prime. Anti-synthesis subagent (dispatch during Layer 4; read before Step 4e)
+
+This subagent should have been dispatched at the same time as Layer 4. If it was not, dispatch it now — before beginning triangulation — and read its output before writing the synthesis draft in Step 4e.
+
+Spawn a fresh general-purpose subagent with this prompt:
+
+> You are an anti-synthesis analyst. Your job is to build the strongest possible evidence-based case that the conclusion this research is pointing toward is WRONG.
+>
+> You have access to the Layer 3 digests and the Layer 2 landscape summary. Your task:
+> 1. State the most likely emerging conclusion based on these digests (one sentence).
+> 2. Assemble every piece of evidence from the digests that CONTRADICTS that conclusion.
+> 3. Find 2–3 analogous cases where a similar conclusion was reached and turned out to be wrong.
+> 4. State the single best counter-narrative: if the opposite of the emerging conclusion were true, what would the world look like?
+> 5. Write findings to runs/<date>-<slug>/anti-synthesis.md.
+> 6. Return a 150-word digest.
+>
+> --- LAYER 2 LANDSCAPE ---
+> {paste Layer 2 content}
+>
+> --- LAYER 3 DIGESTS ---
+> {paste all 200-word digests}
+
+Read anti-synthesis.md before writing the synthesis draft. This subagent checks conclusion-level errors; the red-team (Step 4f) checks reasoning-level errors. Both must run. The counter-narrative from anti-synthesis.md must appear explicitly in the draft's "Competing Perspectives" section.
 
 ### 4b. Triangulate
 Cross-reference findings from different source types. Where do 3+ independent sources agree? That's high-confidence. Where do sources contradict? That needs explicit treatment per [source-discovery.md](references/source-discovery.md)'s "When sources conflict" section.
@@ -265,6 +363,16 @@ Every major finding in the output should be elevated from fact to insight. Apply
 ### 4e. Write the synthesis draft
 Write the draft to `runs/<date>-<slug>/synthesis.md` following the document structure in Step 5. This is a complete first-pass output, not a rough sketch — but it will be revised after red-teaming.
 
+### 4e-prime. Backfill gate (after draft, before red-team)
+
+Run this check on the draft you just wrote: "Is there any gap where the answer would change my conclusion or its confidence level — not merely add nuance?"
+
+**Test for conclusion-changing:** Would a different answer cause a different recommendation, a different confidence rating on the central claim, or a different framing of the key decision? If yes → dispatch a targeted backfill subagent now. Write findings to `runs/<date>-<slug>/BACKFILL-<topic>.md`. Read the output before proceeding to Step 4f.
+
+**Test for not-conclusion-changing (do NOT backfill):** You already have [LOW] or [SPECULATIVE] confidence on this point and your draft acknowledges it. Dispatching a backfill agent for a known flagged gap is auditing, not researching — the red-team handles the critique.
+
+**Do not loop.** If a backfill subagent reveals another gap, flag it in the draft's "Sources & Confidence" section. Do not dispatch a second generation. One pass only.
+
 ### 4f. Independent Red Team (mandatory)
 
 Spawn a fresh `general-purpose` subagent. This agent has NO conversation history with you — that's the entire point. A self-red-team is structurally biased; the agent that built the narrative will defend it. An independent agent has nothing to defend.
@@ -272,13 +380,13 @@ Spawn a fresh `general-purpose` subagent. This agent has NO conversation history
 **Subagent prompt structure:**
 > You are an independent red-team reviewer. You have not seen the research process — only the draft below. Apply the protocol that follows. Return a structured critique.
 >
-> --- SYNTHESIS DRAFT ---
-> {paste the full contents of `runs/<date>-<slug>/synthesis.md`}
+> The synthesis draft is at: runs/<date>-<slug>/synthesis.md
+> Read it in full with your Read tool before applying the red-team protocol below.
 >
 > --- RED-TEAM PROTOCOL ---
 > {paste the full contents of [references/red-team-prompt.md](references/red-team-prompt.md), starting from the "## Protocol" section}
 
-The agent applies the 7 Challenges (Steel Man, Survivorship Bias, Recency Bias, Source Bias, Incentive Analysis, Base Rate, Inversion), scores resilience as SURVIVES / WEAKENED / SERIOUSLY CHALLENGED, and returns a structured critique with specific recommended edits.
+The agent applies the 8 Challenges (Steel Man, Survivorship Bias, Recency Bias, Source Bias, Incentive Analysis, Base Rate, Inversion, Scope Frame), scores resilience as SURVIVES / WEAKENED / SERIOUSLY CHALLENGED, and returns a structured critique with specific recommended edits.
 
 **Then revise the draft** based on the critique. The "Competing Perspectives & Counterarguments" section of the final output should reflect the strongest surviving challenge and the response to it.
 
@@ -368,6 +476,7 @@ Reference: full per-thread notes are in `runs/<date>-<slug>/`.
 
 - Write in prose, not bullet dumps. Bullets only for genuinely list-like content
 - Every substantive claim gets a source or confidence level
+- Confidence levels use only [HIGH], [MEDIUM], [LOW], [SPECULATIVE] — bracketed, inline after the claim. See synthesis-engine.md for the standard.
 - Competing perspectives sit side by side, not buried
 - Numbers always get context (a quantity needs a comparator, growth rate, or "so what")
 - Tables for comparisons (2+ options, 3+ dimensions)
@@ -388,12 +497,14 @@ Reference: full per-thread notes are in `runs/<date>-<slug>/`.
 - [ ] Parallel Threads list produced in Step 2 and drove Step 3 execution
 - [ ] Layers 3 and 4 ran as concurrent subagents (single-message multi-Agent dispatch)
 - [ ] Per-thread raw notes exist on disk under `runs/<date>-<slug>/`
-- [ ] Layer 3 includes at least one Critic / Skeptic thread and one Failure Documentation thread
+- [ ] Layer 3 includes at least one Critic / Skeptic thread, one Failure Documentation thread, and one Anti-Synthesis thread (conclusion-level counter-narrative, not claim-level critique)
 - [ ] Layer 4 covers at least 3 of the 5 universal adjacency directions
 - [ ] TL;DR could stand alone and answers the actual question
 - [ ] Layer 3 contains 3+ non-obvious insights
 - [ ] Layer 4 surfaces at least 3 adjacent opportunities, at least 1 genuinely surprising
 - [ ] Independent red-team subagent was invoked and its critique materially shaped the draft
+- [ ] Anti-synthesis subagent was dispatched (concurrent with Layer 4) and its output was read before writing the synthesis draft
+- [ ] "Competing Perspectives" section reflects the anti-synthesis counter-narrative, not just individual claim rebuttals
 - [ ] Competing perspectives represented
 - [ ] Sources organized by archetype with confidence levels noted throughout
 - [ ] Synthesis happened — output contains insights, not just facts

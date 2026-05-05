@@ -132,6 +132,45 @@ Every serious field has these 7. For your field, identify the concrete instance 
 
 ---
 
+## L3/L4 File Format and KEY FINDINGS Blocks
+
+### What research agents write
+
+Layer 3 and Layer 4 subagents write full prose notes to their assigned scratchpad file. No special format is required from research agents — write dense, evidence-rich notes in whatever structure best captures the findings. The KEY FINDINGS block will be added by a separate summarizer pass after all research agents complete.
+
+### What the summarizer pass adds
+
+After all L3/L4 agents have returned their 200-word digests to main context, a parallel batch of summarizer agents runs (one per file). Each summarizer prepends a KEY FINDINGS block to its assigned file. The KEY FINDINGS block must be at the top of the file after prepending and must follow this exact format:
+
+```
+## KEY FINDINGS
+**Thread ID:** L3-<id> (or L4-<direction>)
+**Source archetype(s):** [archetype names]
+**Overall confidence:** [HIGH / MEDIUM / LOW / SPECULATIVE]
+**Implication for synthesis:** [One sentence: what this thread's findings mean for the
+  central question — what changes for the conclusion if these findings are wrong]
+
+**Top findings:**
+1. [Finding — specific, falsifiable, with source identifier] [HIGH/MEDIUM/LOW/SPECULATIVE]
+2. [Finding — specific, falsifiable, with source identifier] [HIGH/MEDIUM/LOW/SPECULATIVE]
+3. [Finding — specific, falsifiable, with source identifier] [HIGH/MEDIUM/LOW/SPECULATIVE]
+(4–5 optional)
+
+**Strongest counterargument to these findings:**
+[1–2 sentences — the best case against this thread's own conclusions]
+
+**Key gaps / what was NOT found:**
+[1–2 sentences — what was searched but not found, and what that absence implies]
+```
+
+The original prose notes follow after this block unchanged.
+
+**Why a separate summarizer pass:** The summarizer receives all 200-word digests from the full run, not just its own thread. This lets it calibrate "Implication for synthesis" against what the other threads found — something the original research agent cannot do at write time. The summarizer reads its own assigned file in full; the run context provides the background on what other threads found.
+
+**Confidence format:** Use ONLY [HIGH], [MEDIUM], [LOW], [SPECULATIVE] in brackets. Not "MEDIUM-HIGH", not "Signal strength: HIGH", not "Confidence: MEDIUM". See synthesis-engine.md for the calibration standard.
+
+---
+
 ## Step 3: Build the source plan for THIS research
 
 For your Research Plan (SKILL.md Step 2), produce a small table:

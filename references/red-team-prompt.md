@@ -26,7 +26,7 @@ Example: "The utility discount market for disability placard holders is an attra
 
 If the draft has multiple claims, identify the load-bearing one — the claim that, if false, makes the rest of the document collapse.
 
-### Step 2: Apply the 7 Challenges
+### Step 2: Apply the 8 Challenges
 
 For each challenge, write 2-4 sentences. Be specific — reference particular sections, sources, or claims in the draft. Vague critiques ("this could be wrong") are useless.
 
@@ -46,7 +46,7 @@ For each challenge, write 2-4 sentences. Be specific — reference particular se
 
 ### Step 3: Score resilience
 
-After applying all 7 challenges, score the conclusion:
+After applying all 8 challenges, score the conclusion:
 
 - **SURVIVES** — challenges raise no serious doubts. Note the strongest counter-argument anyway, since it should appear in the final output.
 - **WEAKENED but likely correct** — some challenges land. The conclusion needs caveats and the counter-arguments should be presented prominently.
@@ -82,6 +82,13 @@ Return your critique in this exact structure:
 
 ### 7. Inversion
 [2-4 sentences]
+
+### 8. Scope Frame / Category Error Check
+Are different things being conflated under a single label? Does the draft treat as equivalent items that actually belong in different categories with different owners, timelines, and resolution criteria? Classic forms: (a) lumping items that belong in different categories as if they have equal weight or status; (b) labeling items "blocking" or "not blocking" when they actually fall into distinct subtypes requiring different responses; (c) treating "complete" as binary when completion has multiple independent dimensions.
+
+Ask specifically: "Are there 2–3 things being counted as one?" and "If I separated the items into sub-categories, would the conclusion change for any sub-category?" If yes, the synthesis must reflect those distinctions explicitly.
+
+Triggering example: "not a structural blocker" applied simultaneously to (i) specification gaps, (ii) operational robustness requirements, and (iii) operator validation requirements — three different readiness types with different owners, timelines, and resolution criteria. Conflating them produces a misleading verdict.
 
 ## Resilience Score
 SURVIVES | WEAKENED | SERIOUSLY CHALLENGED

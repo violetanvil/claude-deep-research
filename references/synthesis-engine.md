@@ -181,7 +181,7 @@ After synthesis (Step 4c) and before output construction (Step 5), the SKILL.md 
 1. The full synthesis draft (or the path to `synthesis.md` in the run's scratchpad directory)
 2. The contents of [red-team-prompt.md](red-team-prompt.md)
 
-The subagent applies the 7 Challenges protocol (Steel Man, Survivorship Bias, Recency Bias, Source Bias, Incentive Analysis, Base Rate, Inversion), scores resilience as SURVIVES / WEAKENED / SERIOUSLY CHALLENGED, and returns a structured critique with:
+The subagent applies the 8 Challenges protocol (Steel Man, Survivorship Bias, Recency Bias, Source Bias, Incentive Analysis, Base Rate, Inversion, Scope Frame), scores resilience as SURVIVES / WEAKENED / SERIOUSLY CHALLENGED, and returns a structured critique with:
 - The central conclusion as it identified it
 - Per-challenge findings (2-4 sentences each)
 - Top 3 concerns the author should address
@@ -204,25 +204,39 @@ Not all claims deserve equal confidence. Explicitly calibrate and communicate co
 - Data is quantitative and from reliable sources
 - Claim is well-established in the field
 - Red team challenges didn't undermine it
-- Signal: State directly as a finding
 
 **MEDIUM Confidence** — Use when:
 - 2 independent source types agree, or 1 very authoritative source
 - Data is partially quantitative but with gaps
 - Claim is consistent with available evidence but not definitively proven
-- Signal: "The evidence suggests..." or "Based on available data..."
 
 **LOW Confidence** — Use when:
 - Single source or anecdotal evidence only
 - Significant data gaps
 - Contradictory signals from different sources
-- Signal: "Limited data suggests..." or "Based solely on [source], which may not be representative..."
 
 **SPECULATIVE** — Use when:
 - Inference based on patterns rather than direct evidence
 - Extrapolation from analogous situations
 - Expert opinion without supporting data
-- Signal: "Extrapolating from [analog]..." or "If current trends continue..." (always flag the assumption)
+
+**Inline format (required):** Tag every substantive claim with a bracketed confidence label immediately after the claim:
+
+  [HIGH], [MEDIUM], [LOW], or [SPECULATIVE]
+
+Only these four labels are permitted. Do not use "MEDIUM-HIGH", "Signal strength: HIGH", "Confidence: MEDIUM", "HIGH confidence", or any other variant. If you are tempted to write "MEDIUM-HIGH," choose [MEDIUM] and note what would promote it to [HIGH].
+
+Example:
+  "The vsock kernel interface has been stable since Linux 4.8. [HIGH] The 12× heartbeat ratio risks false-positive restarts under jitter. [MEDIUM] Vsock reliability under concurrent Kata workload stress has not been publicly benchmarked. [SPECULATIVE]"
+
+**End-of-document confidence summary (required in every final output):**
+Every final output's "Sources & Confidence" section must include:
+
+  ### Confidence Summary
+  - [claim 1]: [HIGH/MEDIUM/LOW/SPECULATIVE] — [one-line reasoning]
+  - [claim 2]: [HIGH/MEDIUM/LOW/SPECULATIVE] — [one-line reasoning]
+  - [claim 3]: [HIGH/MEDIUM/LOW/SPECULATIVE] — [one-line reasoning]
+  Overall: [HIGH/MEDIUM/LOW] — [one sentence]
 
 ### When to use each level
 
